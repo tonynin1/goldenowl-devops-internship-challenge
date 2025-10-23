@@ -68,19 +68,31 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # Option 1: Deploy to EC2 (uncomment if using EC2)
-      # - name: Deploy to EC2
-      #   run: |
-      #     echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
-      #     chmod 600 private_key.pem
-      #     ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
-      #       docker pull ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
-      #       docker stop golden-owl-app || true
-      #       docker rm golden-owl-app || true
-      #       docker run -d -p 80:3000 --name golden-owl-app ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
-      #     EOF
+      - name: Deploy to EC2
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+            docker pull ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
+            docker stop golden-owl-app || true
+            docker rm golden-owl-app || true
+            docker run -d -p 80:3000 --name golden-owl-app --restart unless-stopped ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
+          EOF
 
-      # Option 2: Deploy to AWS ECS (uncomment if using ECS)
+      - name: Verify Deployment
+        run: |
+          echo "⏳ Waiting for application to start..."
+          sleep 10
+          echo "🔍 Verifying deployment..."
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.EC2_HOST }})
+          if [ "$response" = "200" ]; then
+            echo "✅ Deployment successful! Application is running at http://${{ secrets.EC2_HOST }}"
+          else
+            echo "⚠️ Warning: Received HTTP status $response"
+            echo "Application may still be starting up. Please verify manually at http://${{ secrets.EC2_HOST }}"
+          fi
+
+      # Option 2: Deploy to AWS ECS (for future use)
       # - name: Fill in the new image ID in the Amazon ECS task definition
       #   id: task-def
       #   uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -96,8 +108,3 @@ jobs:
       #     service: golden-owl-service
       #     cluster: golden-owl-cluster
       #     wait-for-service-stability: true
-
-      - name: Deployment placeholder
-        run: |
-          echo "🚀 Deployment step - Configure your deployment method above"
-          echo "Uncomment either EC2 or ECS deployment steps"
