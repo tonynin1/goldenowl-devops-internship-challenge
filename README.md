@@ -1,7 +1,46 @@
 # Golden Owl DevOps Internship - Technical Test
-At Golden Owl, we believe in treating infrastructure as code and automating resource provisioning to the fullest extent possible. 
+
+![CI](https://github.com/tonynin1/goldenowl-devops-internship-challenge/actions/workflows/ci.yml/badge.svg)
+![CD](https://github.com/tonynin1/goldenowl-devops-internship-challenge/actions/workflows/cd.yml/badge.svg)
+
+At Golden Owl, we believe in treating infrastructure as code and automating resource provisioning to the fullest extent possible.
 
 In this technical test, we challenge you to create a robust CI build pipeline using GitHub Actions. You have the freedom to complete this test in your local environment.
+
+## 🚀 Live Deployment
+
+**The application is successfully deployed and accessible at:** **http://3.95.65.79**
+
+Try it:
+```bash
+curl http://3.95.65.79
+# Response: {"message":"Welcome warriors to Golden Owl!"}
+```
+
+Or open in your browser: [http://3.95.65.79](http://3.95.65.79)
+
+## ✅ Implementation Summary
+
+This repository demonstrates a complete CI/CD pipeline implementation with the following features:
+
+### Core Requirements
+- ✅ **Dockerized Application** - Multi-stage Docker build with optimized production image
+- ✅ **CI Pipeline** - Automated testing, linting, and formatting checks on feature branches
+- ✅ **CD Pipeline** - Automated deployment to AWS EC2 on master branch
+- ✅ **Container Registry** - Docker Hub integration for image storage
+- ✅ **Cloud Deployment** - Live application running on AWS EC2
+
+### Additional Features
+- ✅ **Visual Flow Diagrams** - Comprehensive Mermaid diagrams (8 different visualizations)
+- ✅ **Automated Setup** - EC2 instance setup script for Docker installation
+- ✅ **Health Checks** - Automated deployment verification
+- ✅ **Zero-Downtime Deployment** - Container restart with health monitoring
+- ✅ **Comprehensive Documentation** - Detailed setup and deployment guides
+
+### Documentation
+- 📖 [DEPLOYMENT.md](DEPLOYMENT.md) - Complete deployment guide with step-by-step instructions
+- 📊 [CI/CD Workflow Diagrams](docs/CI-CD-WORKFLOW-DIAGRAM.md) - Visual representations with Mermaid
+- 🔧 [EC2 Setup Script](scripts/setup-ec2.sh) - Automated Docker installation for EC2
 
 ## Your Mission 🌟
 Your mission, should you choose to accept it, is to craft a CI job that:
