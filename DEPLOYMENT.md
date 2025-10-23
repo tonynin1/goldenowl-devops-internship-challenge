@@ -42,21 +42,72 @@ Add the following secrets:
 - `EC2_SSH_KEY` - Your EC2 private key (PEM format)
 - `EC2_HOST` - Your EC2 instance public IP or DNS
 
-### 3. **AWS Setup** (Choose one method)
+### 3. **AWS EC2 Setup** (Step-by-Step Guide)
 
-#### Option A: AWS EC2
-1. Launch an EC2 instance (Ubuntu 22.04 LTS recommended)
-2. Install Docker on the instance
-3. Configure security group to allow:
-   - Port 80 (HTTP)
-   - Port 22 (SSH)
-4. Create or use existing SSH key pair
+#### Step 3.1: Launch EC2 Instance
 
-#### Option B: AWS ECS
-1. Create an ECS cluster
-2. Create a task definition (see `ecs-task-definition.json` below)
-3. Create an ECS service
-4. Set up Application Load Balancer (optional but recommended)
+1. **Log in to AWS Console** → Navigate to EC2 Dashboard
+2. **Click "Launch Instance"**
+3. **Configure your instance:**
+   - **Name:** `golden-owl-app-server`
+   - **AMI:** Ubuntu Server 22.04 LTS (Free tier eligible)
+   - **Instance type:** `t2.micro` (Free tier eligible - 1 vCPU, 1 GB RAM)
+   - **Key pair:**
+     - Create new key pair: `golden-owl-key`
+     - Type: RSA
+     - Format: `.pem`
+     - ⚠️ **SAVE THE .PEM FILE SECURELY** - You'll need it for GitHub Secrets
+   - **Network settings:**
+     - ✅ Allow SSH traffic from: Your IP (recommended) or 0.0.0.0/0
+     - ✅ Allow HTTP traffic from: 0.0.0.0/0 (internet)
+   - **Storage:** 8 GiB gp3 (default is sufficient)
+4. **Click "Launch Instance"**
+5. **Note your Public IPv4 address** (you'll need this for GitHub Secrets)
+
+#### Step 3.2: Configure Security Group
+
+Verify your EC2 Security Group has these inbound rules:
+
+| Type | Protocol | Port Range | Source               |     Description    |
+|------|----------|------------|----------------------|--------------------|
+| SSH  |    TCP   |     22     | Your IP or 0.0.0.0/0 | SSH access         |
+| HTTP |    TCP   |     80     | 0.0.0.0/0            | Application access |
+
+#### Step 3.3: Setup Docker on EC2
+
+```bash
+# 1. Set correct permissions on your private key
+chmod 400 golden-owl-key.pem
+
+# 2. Connect to your EC2 instance (replace YOUR_EC2_IP)
+ssh -i golden-owl-key.pem ubuntu@YOUR_EC2_IP
+
+# 3. Once connected, download and run the setup script
+wget https://raw.githubusercontent.com/tonynin1/goldenowl-devops-internship-challenge/feature/ec2-deployment/scripts/setup-ec2.sh
+
+# Or manually copy from your local machine:
+# exit
+# scp -i golden-owl-key.pem scripts/setup-ec2.sh ubuntu@YOUR_EC2_IP:~/
+# ssh -i golden-owl-key.pem ubuntu@YOUR_EC2_IP
+
+# 4. Make script executable and run it
+chmod +x setup-ec2.sh
+./setup-ec2.sh
+
+# 5. Verify Docker installation
+docker --version
+
+# You should see: Docker version 20.x.x or higher
+```
+
+#### Step 3.4: Get Your EC2 Public IP
+
+```bash
+# While connected to EC2, run:
+curl http://169.254.169.254/latest/meta-data/public-ipv4
+
+# Or check in AWS Console → EC2 → Instances → Your instance → Public IPv4 address
+```
 
 ## 🚀 CI/CD Workflows
 
@@ -81,21 +132,62 @@ Add the following secrets:
 2. 📤 Push to Docker Hub
 3. ☁️ Deploy to AWS (EC2 or ECS)
 
-## 🔧 Setup Instructions
+## 🔧 Complete Setup Instructions
 
 ### Step 1: Configure GitHub Secrets
-```bash
-# Add secrets via GitHub UI
-Repository → Settings → Secrets and variables → Actions
-```
 
-### Step 2: Choose Deployment Method
+**Navigate to:** Your Repository → Settings → Secrets and variables → Actions → New repository secret
 
-Edit `.github/workflows/cd.yml` and uncomment either:
-- **EC2 deployment** (lines 72-81)
-- **ECS deployment** (lines 84-98)
+Add these secrets one by one:
 
-### Step 3: For ECS Deployment
+#### Required Secrets Checklist:
+
+- [ ] **DOCKER_USERNAME**
+  - Value: Your Docker Hub username
+  - Example: `johndoe`
+
+- [ ] **DOCKER_PASSWORD**
+  - Value: Your Docker Hub password or access token
+  - Recommendation: Use access token (more secure)
+  - Get token: Docker Hub → Account Settings → Security → New Access Token
+
+- [ ] **AWS_ACCESS_KEY_ID**
+  - Value: Your AWS access key ID
+  - Get it: AWS Console → IAM → Users → Your user → Security credentials → Create access key
+
+- [ ] **AWS_SECRET_ACCESS_KEY**
+  - Value: Your AWS secret access key
+  - Note: This is shown only once when creating the access key
+
+- [ ] **EC2_SSH_KEY**
+  - Value: Contents of your `.pem` file
+  - How to get:
+    ```bash
+    cat golden-owl-key.pem
+    # Copy the ENTIRE output including:
+    # -----BEGIN RSA PRIVATE KEY-----
+    # ...
+    # -----END RSA PRIVATE KEY-----
+    ```
+
+- [ ] **EC2_HOST**
+  - Value: Your EC2 public IP address
+  - Example: `54.123.45.67`
+  - Get it: AWS Console → EC2 → Instances → Public IPv4 address
+
+### Step 2: EC2 Deployment is Now Active
+
+✅ The CD workflow has been configured for EC2 deployment!
+
+The workflow will automatically:
+1. Build and push Docker image to Docker Hub
+2. SSH into your EC2 instance
+3. Pull the latest image
+4. Stop and remove old container
+5. Start new container
+6. Verify deployment
+
+<!-- ### Step 3: Optional - ECS Deployment (Alternative Method) -->
 
 Create `ecs-task-definition.json`:
 ```json
