@@ -284,9 +284,9 @@ docker run -p 3000:3000 your-username/golden-owl-app:latest
 - ECS Service Auto Scaling
 - Scale based on CPU/Memory/Request count
 
-### 3. Infrastructure as Code
-- Use Terraform or CloudFormation
-- Version control your infrastructure
+### 3. Automation Scripts
+- Use setup scripts for repeatable deployments
+- Version control your infrastructure configuration
 
 ## 📊 Recommended Metrics
 
